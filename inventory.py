@@ -4,12 +4,19 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import tkinter.font as tkfont  # Import tkinter.font for custom fonts
+import platform  # Import platform to detect the OS
 
 class InventoryApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Inventory Control System")
         self.root.attributes('-fullscreen', True)  # Set the window to full-screen
+
+        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icon.ico')
+        if os.path.exists(icon_path):
+            self.root.iconbitmap(icon_path)  # Set the window icon
+        else:
+            print(f"Icon not found at {icon_path}. Make sure the icon file is available.")
 
         # Bind the Escape key to exit full-screen mode
         self.root.bind("<Escape>", self.exit_fullscreen)
@@ -29,11 +36,21 @@ class InventoryApp:
         self.root.quit()
 
     def create_connection(self):
-        """Create a database connection with the absolute path."""
-        # Get the directory where the script is located
-        script_dir = os.path.dirname(os.path.abspath(__file__))
+        """Create a database connection, saving the database in a standard location."""
+        # For Windows, save the database in AppData; otherwise, use the home directory
+        if platform.system() == 'Windows':
+            app_data_path = os.getenv('APPDATA')  # Get AppData path on Windows
+        else:
+            app_data_path = os.path.expanduser('~')  # Use the home directory on macOS/Linux
+
+        # Create the 'InventoryControl' directory inside AppData (or home directory on Linux/macOS)
+        db_dir = os.path.join(app_data_path, 'InventoryControl')
+        if not os.path.exists(db_dir):
+            os.makedirs(db_dir)
+
         # Create the full path to the database file
-        db_path = os.path.join(script_dir, 'inventory.db')
+        db_path = os.path.join(db_dir, 'inventory.db')
+
         # Connect to the database using the full path
         conn = sqlite3.connect(db_path)
         return conn
